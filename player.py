@@ -13,6 +13,7 @@ class Player(CircleShape):
         self.immunity_timer = 0
         self.velocity = pygame.Vector2(0, 0)
         self.weapon = Weapon()
+        self.shield_timer = 0
     
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -49,7 +50,14 @@ class Player(CircleShape):
         return False
 
     def draw(self, screen):
+        if self.shield_timer > 0:
+            shield_radius = self.radius + 8
+            shield_surface = pygame.Surface((shield_radius * 2, shield_radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(shield_surface, (255, 255, 0, 100), (shield_radius, shield_radius), shield_radius)
+            screen.blit(shield_surface, (self.position.x - shield_radius, self.position.y - shield_radius))
+        
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
+        
 
     def rotate(self, dt):
         self.rotation += PLAYER_TURN_SPEED * dt
@@ -61,6 +69,9 @@ class Player(CircleShape):
     def shoot(self):
         self.timer = self.weapon.get_cooldown()
         self.weapon.shoot(self.position, self.rotation)
+
+    def activate_shield(self):
+        self.shield_timer = SHIELD_DURATION
 
 
     def respawn(self):
@@ -74,6 +85,8 @@ class Player(CircleShape):
         self.timer -= dt
         if self.immunity_timer > 0:
             self.immunity_timer -= dt
+        if self.shield_timer > 0:
+            self.shield_timer -= dt
         keys = pygame.key.get_pressed()
 
         forward = pygame.Vector2(0, 1).rotate(self.rotation)

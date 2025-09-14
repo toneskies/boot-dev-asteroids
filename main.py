@@ -5,6 +5,7 @@ from player import *
 from asteroid import *
 from asteroidfield import *
 from explosion import *
+from powerup import *
 
 def main():
     # INITIALIZATION
@@ -30,17 +31,20 @@ def main():
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
+    powerups = pygame.sprite.Group()
 
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
     Shot.containers = (shots, updatable, drawable)
     Explosion.containers = (updatable, drawable)
+    PowerUp.containers = (powerups, updatable, drawable)
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
 
     dt = 0
+    powerup_spawn_timer = 0
 
     # SCORING
     score = 0
@@ -59,11 +63,22 @@ def main():
                 if event.key == pygame.K_LCTRL:
                     player.weapon.next_weapon()
 
+        # Powerup logic
+        powerup_spawn_timer += dt
+        if powerup_spawn_timer > POWERUP_SPAWN_RATE:
+            powerup_spawn_timer = 0
+            PowerUp()
+
+
         updatable.update(dt)
 
         for obj in asteroids:
             if player.collides_with_asteroid(obj):
-                if player.immunity_timer <= 0:
+                if player.shield_timer > 0:
+                    score += obj.get_score()
+                    Explosion(obj.get_position(), obj.get_radius())
+                    obj.split()
+                elif player.immunity_timer <= 0:
                     if lives > 1:
                         lives -= 1
                         obj.kill()
@@ -76,6 +91,11 @@ def main():
                         pygame.time.wait(3000)
                         print("Game Over!")
                         sys.exit()
+
+        for powerup in powerups:
+            if powerup.collision(player):
+                player.activate_shield()
+                powerup.kill()
 
         for asteroid in asteroids:
             for bullet in shots:
