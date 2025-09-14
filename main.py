@@ -136,18 +136,19 @@ def main():
         lives_text = font.render(f"Lives: {lives}", True, "white")
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
-        weapon_text = font.render(f"Weapon: {player.weapon.name}", True, "white")
-        screen.blit(weapon_text, (10, SCREEN_HEIGHT - weapon_text.get_height() - 10))
-
         # Draw Bomb UI
         bomb_icon_rect = pygame.Rect(10, SCREEN_HEIGHT - 40, 30, 30)
         pygame.draw.circle(screen, "red", bomb_icon_rect.center, 15)
         bomb_font = pygame.font.Font(None, 24)
         bomb_b_text = bomb_font.render("B", True, "white")
         screen.blit(bomb_b_text, bomb_b_text.get_rect(center=bomb_icon_rect.center))
-
+        
         bomb_count_text = font.render(f": {player.bombs}", True, "white")
         screen.blit(bomb_count_text, (bomb_icon_rect.right + 5, bomb_icon_rect.centery - bomb_count_text.get_height() / 2))
+
+        # Draw Weapon UI
+        weapon_text = font.render(f"Weapon: {player.weapon.name}", True, "white")
+        screen.blit(weapon_text, (10, bomb_icon_rect.top - weapon_text.get_height() - 5))
 
 
         pygame.display.flip()

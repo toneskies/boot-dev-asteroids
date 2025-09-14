@@ -17,7 +17,8 @@ class Player(CircleShape):
         self.shield_timer = 0
         self.bombs = 1
         self.bomb_cooldown_timer = 0
-    
+        self.font = pygame.font.Font(None, 24)
+
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius / 1.5
@@ -58,6 +59,10 @@ class Player(CircleShape):
             shield_surface = pygame.Surface((shield_radius * 2, shield_radius * 2), pygame.SRCALPHA)
             pygame.draw.circle(shield_surface, (255, 255, 0, 100), (shield_radius, shield_radius), shield_radius)
             screen.blit(shield_surface, (self.position.x - shield_radius, self.position.y - shield_radius))
+
+            timer_text = self.font.render(f"{self.shield_timer:.1f}", True, "yellow")
+            text_rect = timer_text.get_rect(center=(self.position.x, self.position.y - self.radius - 20))
+            screen.blit(timer_text, text_rect)
         
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
         
