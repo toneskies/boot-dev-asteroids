@@ -26,3 +26,6 @@ class Asteroid(CircleShape):
 
     def get_score(self):
         return int(100 / (self.radius / 10))
+    
+    def get_position(self):
+        return self.position

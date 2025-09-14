@@ -4,6 +4,7 @@ from constants import *
 from player import *
 from asteroid import *
 from asteroidfield import *
+from explosion import *
 
 def main():
     # INITIALIZATION
@@ -25,6 +26,7 @@ def main():
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
     Shot.containers = (shots, updatable, drawable)
+    Explosion.containers = (updatable, drawable)
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
@@ -35,6 +37,8 @@ def main():
     score = 0
     font = pygame.font.Font(None, 36)
 
+    # RESPAWNING
+    lives = PLAYER_LIVES
 
     # GAME LOOP
     while(True):
@@ -47,18 +51,25 @@ def main():
 
         for obj in asteroids:
             if obj.collision(player):
-                text = font.render(f'Final Score: {score}', True, "white")
-                text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT/2))
-                screen.blit(text, text_rect)
-                pygame.display.flip()
-                pygame.time.wait(3000)
-                print("Game Over!")
-                sys.exit()
+                if player.immunity_timer <= 0:
+                    if lives > 1:
+                        lives -= 1
+                        obj.kill()
+                        player.respawn()
+                    else:
+                        text = font.render(f'Final Score: {score}', True, "white")
+                        text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT/2))
+                        screen.blit(text, text_rect)
+                        pygame.display.flip()
+                        pygame.time.wait(3000)
+                        print("Game Over!")
+                        sys.exit()
 
         for asteroid in asteroids:
             for bullet in shots:
                 if bullet.collision(asteroid):
                     score += asteroid.get_score()
+                    Explosion(asteroid.get_position())
                     asteroid.split()
                     bullet.kill()
 
@@ -67,8 +78,11 @@ def main():
         for obj in drawable:
             obj.draw(screen)
 
-        score_text = font.render(f'Score: {score}', True, "white")
+        score_text = font.render(f"Score: {score}", True, "white")
         screen.blit(score_text, (10,10))
+
+        lives_text = font.render(f"Lives: {lives}", True, "white")
+        screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
         pygame.display.flip()
         dt = time_clock.tick(60) / 1000

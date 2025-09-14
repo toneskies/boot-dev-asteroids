@@ -9,6 +9,7 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
         self.timer = 0
+        self.immunity_timer = 0
     
     # in the player class
     def triangle(self):
@@ -33,8 +34,16 @@ class Player(CircleShape):
         self.timer = PLAYER_SHOOT_COOLDOWN
         shot = Shot(self.position, self.rotation)
 
+    def respawn(self):
+        self.position = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.rotation = 0
+        self.immunity_timer = PLAYER_IMMUNITY_TIMER
+
+
     def update(self, dt):
         self.timer -= dt
+        if self.immunity_timer > 0:
+            self.immunity_timer -= dt
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_a]:
