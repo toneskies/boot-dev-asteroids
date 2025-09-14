@@ -23,3 +23,6 @@ class Asteroid(CircleShape):
         asteroid_2 = Asteroid(self.position.x, self.position.y, self.radius / 2)    
         asteroid_1.velocity = pygame.math.Vector2.rotate(self.velocity, rand_angle) * 1.2
         asteroid_2.velocity = pygame.math.Vector2.rotate(self.velocity, -1 * rand_angle) * 1.2
+
+    def get_score(self):
+        return int(100 / (self.radius / 10))
