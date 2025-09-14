@@ -1,5 +1,6 @@
 import pygame
 from circleshape import *
+from enemyshot import *
 
 class Enemy(CircleShape):
     def __init__(self, x, y):
@@ -15,6 +16,10 @@ class Enemy(CircleShape):
             (self.position.x - self.radius, self.position.y + self.radius)
         ]
         pygame.draw.polygon(screen, "red", points, 2)
+
+    def shoot(self, player_position):
+        self.shoot_cooldown = ENEMY_SHOOT_COOLDOWN
+        EnemyShot(self.position, player_position)
 
     def update(self, dt, player):
         # get player direction

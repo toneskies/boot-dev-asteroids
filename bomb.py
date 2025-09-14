@@ -28,7 +28,7 @@ class Bomb(CircleShape):
             pulse_alpha = 128 * (0.5 * math.sin(pulse_time * 8) + 0.5) + 50
 
             bomb_surface = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-            pygame.draw.circle(bomb_surface, (255, 0, 0, int(pulse_alpha)), (self.radius, self.radius), self.radius)
+            pygame.draw.circle(bomb_surface, (0, 150, 255, int(pulse_alpha)), (self.radius, self.radius), self.radius)
             screen.blit(bomb_surface, (self.position.x - self.radius, self.position.y - self.radius))
 
             timer_text = self.font.render(f"{math.ceil(self.timer)}", True, "white")

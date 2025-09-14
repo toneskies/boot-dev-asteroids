@@ -19,7 +19,7 @@ class PowerUp(CircleShape):
             pulse_radius = self.radius * 0.6 * (0.5 *math.sin(pulse_time * 4) + 0.5)
             pygame.draw.circle(screen, "white", self.position, int(pulse_radius))
         elif self.type == "bomb":
-            pygame.draw.circle(screen, "red", self.position, self.radius, 3)
+            pygame.draw.circle(screen, "blue", self.position, self.radius, 3)
             font = pygame.font.Font(None, 24)
             text = font.render("B", True, "white")
             text_rect = text.get_rect(center=self.position)

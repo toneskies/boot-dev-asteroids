@@ -10,16 +10,17 @@ from powerup import *
 from bomb import *
 from enemy import *
 from shot import *
+from enemyshot import *
 import ui
 
 def game_loop(screen):
-    """Core Gameplay Loop"""
+    """This function contains the core gameplay loop."""
     time_clock = pygame.time.Clock()
     background_image = pygame.image.load("space_background.png").convert()
     background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
     background_image.set_alpha(80)
 
-    # Create Sprite Groups
+    # Create sprite groups
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
@@ -27,6 +28,7 @@ def game_loop(screen):
     powerups = pygame.sprite.Group()
     bombs = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
+    enemy_shots = pygame.sprite.Group()
 
     # Assign containers
     Player.containers = (updatable, drawable)
@@ -37,11 +39,13 @@ def game_loop(screen):
     PowerUp.containers = (powerups, updatable, drawable)
     Bomb.containers = (bombs, updatable, drawable)
     Enemy.containers = (enemies, drawable)
+    EnemyShot.containers = (enemy_shots, updatable, drawable)
+
 
     # Create game objects
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT /2)
+    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
-    
+
     dt = 0
     powerup_spawn_timer = 0
     enemy_spawn_timer = 0
@@ -58,21 +62,21 @@ def game_loop(screen):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LCTRL:
                     player.weapon.next_weapon()
-        
+
         # Timers
         powerup_spawn_timer += dt
         if powerup_spawn_timer > POWERUP_SPAWN_RATE:
             powerup_spawn_timer = 0
             powerup_type = random.choice(["shield", "bomb"])
             PowerUp(powerup_type)
-        
+
         enemy_spawn_timer += dt
         if enemy_spawn_timer > ENEMY_SPAWN_RATE:
             enemy_spawn_timer = 0
             x = random.choice([0 - ENEMY_RADIUS, SCREEN_WIDTH + ENEMY_RADIUS])
             y = random.randint(0, SCREEN_HEIGHT)
             Enemy(x, y)
-        
+
         # Update
         updatable.update(dt)
         enemies.update(dt, player)
@@ -92,7 +96,17 @@ def game_loop(screen):
                     else:
                         print("Game Over!")
                         return score
-        
+
+        for shot in enemy_shots:
+            if shot.collision(player):
+                shot.kill()
+                if player.shield_timer <= 0 and player.immunity_timer <= 0:
+                    if lives > 1:
+                        lives -= 1
+                        player.respawn()
+                    else:
+                        return score
+
         for powerup in powerups:
             if powerup.collision(player):
                 if powerup.type == "shield":
@@ -140,7 +154,7 @@ def game_loop(screen):
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
         bomb_icon_rect = pygame.Rect(10, SCREEN_HEIGHT - 40, 30, 30)
-        pygame.draw.circle(screen, "red", bomb_icon_rect.center, 15)
+        pygame.draw.circle(screen, "blue", bomb_icon_rect.center, 15)
         bomb_font = pygame.font.Font(None, 24)
         bomb_b_text = bomb_font.render("B", True, "white")
         screen.blit(bomb_b_text, bomb_b_text.get_rect(center=bomb_icon_rect.center))
@@ -153,15 +167,6 @@ def game_loop(screen):
 
         pygame.display.flip()
         dt = time_clock.tick(60) / 1000
-
-def main():
-    """Main function to control game states."""
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Asteroids")
-    background_image = pygame.image.load("space_background.png").convert()
-    background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    background_image.set_alpha(80)
 
 def main():
     """Main function to control game states."""
@@ -188,26 +193,37 @@ def main():
             ui.draw_main_menu(screen)
             pygame.display.flip()
 
-        # --- PLAYING STATE ---
-        final_score = game_loop(screen)
-        
-        # --- GAME OVER STATE ---
-        game_over_running = True
-        restart_button_rect = None
-        while game_over_running:
-            mouse_pos = pygame.mouse.get_pos()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if restart_button_rect and restart_button_rect.collidepoint(event.pos):
-                        game_over_running = False
+        # --- SESSION LOOP (PLAY -> GAME OVER -> RESTART) ---
+        while True:
+            # --- PLAYING STATE ---
+            final_score = game_loop(screen)
             
-            screen.fill("black")
-            screen.blit(background_image, (0, 0))
-            restart_button_rect = ui.draw_game_over_screen(screen, final_score, mouse_pos)
-            pygame.display.flip()
+            # --- GAME OVER STATE ---
+            game_over_running = True
+            
+            # Define the button's rectangle BEFORE the event loop
+            restart_button_rect = pygame.Rect(0, 0, 250, 80)
+            restart_button_rect.center = (screen.get_width() / 2, screen.get_height() / 2 + 100)
+
+            while game_over_running:
+                mouse_pos = pygame.mouse.get_pos()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        # Use the pre-defined rect for the collision check
+                        if restart_button_rect.collidepoint(event.pos):
+                            game_over_running = False # Exit the game over screen
+                
+                screen.fill("black")
+                screen.blit(background_image, (0, 0))
+                ui.draw_game_over_screen(screen, final_score, mouse_pos)
+                pygame.display.flip()
+            
+            # After the game_over_running loop, the session loop will repeat,
+            # effectively restarting the game.
 
 if __name__ == "__main__":
     main()
+
