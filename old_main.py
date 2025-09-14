@@ -9,17 +9,28 @@ from explosion import *
 from powerup import *
 from bomb import *
 from enemy import *
-from shot import *
 import ui
 
-def game_loop(screen):
-    """Core Gameplay Loop"""
+def main():
+    # INITIALIZATION
+    print("Starting Asteroids!")
+    print(f'Screen width: {SCREEN_WIDTH}')
+    print(f'Screen height: {SCREEN_HEIGHT}')
+
+    # Initialize pygame
+    pygame.init()
+
+    # Setup
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Asteroids")
     time_clock = pygame.time.Clock()
+
+    # Background Image
     background_image = pygame.image.load("space_background.png").convert()
     background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
     background_image.set_alpha(80)
 
-    # Create Sprite Groups
+
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
@@ -28,7 +39,6 @@ def game_loop(screen):
     bombs = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
 
-    # Assign containers
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (updatable)
@@ -38,46 +48,50 @@ def game_loop(screen):
     Bomb.containers = (bombs, updatable, drawable)
     Enemy.containers = (enemies, drawable)
 
-    # Create game objects
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT /2)
+    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
-    
+    enemy = Enemy(100, 100)
+
     dt = 0
     powerup_spawn_timer = 0
     enemy_spawn_timer = 0
+
+    # SCORING
     score = 0
-    lives = PLAYER_LIVES
     font = pygame.font.Font(None, 36)
 
+    # RESPAWNING
+    lives = PLAYER_LIVES
+
     # GAME LOOP
-    while True:
+    while(True):
+        # User clicks 'x' closes the game
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LCTRL:
                     player.weapon.next_weapon()
-        
-        # Timers
+
+        # Powerup logic
         powerup_spawn_timer += dt
         if powerup_spawn_timer > POWERUP_SPAWN_RATE:
             powerup_spawn_timer = 0
             powerup_type = random.choice(["shield", "bomb"])
             PowerUp(powerup_type)
-        
+
+
+        # Enemy Spawn
         enemy_spawn_timer += dt
         if enemy_spawn_timer > ENEMY_SPAWN_RATE:
             enemy_spawn_timer = 0
             x = random.choice([0 - ENEMY_RADIUS, SCREEN_WIDTH + ENEMY_RADIUS])
             y = random.randint(0, SCREEN_HEIGHT)
             Enemy(x, y)
-        
-        # Update
+
         updatable.update(dt)
         enemies.update(dt, player)
 
-        # Collisions
         for obj in asteroids:
             if player.collides_with_asteroid(obj):
                 if player.shield_timer > 0:
@@ -90,9 +104,14 @@ def game_loop(screen):
                         obj.kill()
                         player.respawn()
                     else:
+                        text = font.render(f'Final Score: {score}', True, "white")
+                        text_rect = text.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT/2))
+                        screen.blit(text, text_rect)
+                        pygame.display.flip()
+                        pygame.time.wait(3000)
                         print("Game Over!")
-                        return score
-        
+                        sys.exit()
+
         for powerup in powerups:
             if powerup.collision(player):
                 if powerup.type == "shield":
@@ -101,21 +120,16 @@ def game_loop(screen):
                     player.add_bomb()
                 powerup.kill()
 
+        # Bomb Shockwave Collision
         for bomb in bombs:
             if bomb.state == "exploding":
                 for asteroid in asteroids.copy():
-                    if asteroid.position.distance_to(bomb.position) < bomb.shockwave_radius:
+                    distance = asteroid.position.distance_to(bomb.position)
+                    if distance < bomb.shockwave_radius:
                         score += asteroid.get_score()
                         Explosion(asteroid.get_position(), asteroid.get_radius())
                         asteroid.kill()
 
-        for enemy_ship in enemies:
-            for bullet in shots:
-                if bullet.collision(enemy_ship):
-                    score += enemy_ship.get_score()
-                    Explosion(enemy_ship.get_position(), enemy_ship.get_radius())
-                    enemy_ship.kill()
-                    bullet.kill()
 
         for asteroid in asteroids:
             for bullet in shots:
@@ -125,20 +139,28 @@ def game_loop(screen):
                     asteroid.split()
                     bullet.kill()
 
-        # Drawing
+        for enemy in enemies:
+            for bullet in shots:
+                if bullet.collision(enemy):
+                    score += enemy.get_score()
+                    Explosion(enemy.get_position(), enemy.get_radius())
+                    enemy.kill()
+                    bullet.kill()
+
+
         screen.fill("black")
         screen.blit(background_image, (0, 0))
 
         for obj in drawable:
             obj.draw(screen)
 
-        # UI Text
         score_text = font.render(f"Score: {score}", True, "white")
-        screen.blit(score_text, (10, 10))
+        screen.blit(score_text, (10,10))
 
         lives_text = font.render(f"Lives: {lives}", True, "white")
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
+        # Draw Bomb UI
         bomb_icon_rect = pygame.Rect(10, SCREEN_HEIGHT - 40, 30, 30)
         pygame.draw.circle(screen, "red", bomb_icon_rect.center, 15)
         bomb_font = pygame.font.Font(None, 24)
@@ -148,56 +170,14 @@ def game_loop(screen):
         bomb_count_text = font.render(f": {player.bombs}", True, "white")
         screen.blit(bomb_count_text, (bomb_icon_rect.right + 5, bomb_icon_rect.centery - bomb_count_text.get_height() / 2))
 
+        # Draw Weapon UI
         weapon_text = font.render(f"Weapon: {player.weapon.name}", True, "white")
         screen.blit(weapon_text, (10, bomb_icon_rect.top - weapon_text.get_height() - 5))
+
 
         pygame.display.flip()
         dt = time_clock.tick(60) / 1000
 
-def main():
-    """Main function to control game states."""
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Asteroids")
-    background_image = pygame.image.load("space_background.png").convert()
-    background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    background_image.set_alpha(80)
-
-    while True:
-        # --- MENU STATE ---
-        menu_running = True
-        while menu_running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    menu_running = False
-            
-            screen.fill("black")
-            screen.blit(background_image, (0, 0))
-            ui.draw_main_menu(screen)
-            pygame.display.flip()
-
-        # --- PLAYING STATE ---
-        final_score = game_loop(screen)
-        
-        # --- GAME OVER STATE ---
-        game_over_running = True
-        restart_button_rect = None
-        while game_over_running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if restart_button_rect and restart_button_rect.collidepoint(event.pos):
-                        game_over_running = False
-            
-            screen.fill("black")
-            screen.blit(background_image, (0, 0))
-            restart_button_rect = ui.draw_game_over_screen(screen, final_score)
-            pygame.display.flip()
 
 if __name__ == "__main__":
     main()
