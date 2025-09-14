@@ -21,6 +21,19 @@ PLAYER_MAX_SPEED = 400
 SHOT_RADIUS = 5
 PLAYER_SHOOT_SPEED = 500
 
+# WEAPONS
+WEAPONS = {
+    "single": {
+        "cooldown": 0.3,
+    },
+    "double": {
+        "cooldown": 0.5,
+    },
+    "scatter": {
+        "cooldown": 0.7,
+    }
+}
+
 # EXPLOSIONS
 EXPLOSION_PARTICLES = 15
 EXPLOSION_SPEED = 100

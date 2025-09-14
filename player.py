@@ -2,6 +2,7 @@ import pygame
 from constants import *
 from circleshape import *
 from shot import *
+from weapon import *
 
 
 class Player(CircleShape):
@@ -11,6 +12,7 @@ class Player(CircleShape):
         self.timer = 0
         self.immunity_timer = 0
         self.velocity = pygame.Vector2(0, 0)
+        self.weapon = Weapon()
     
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -31,8 +33,9 @@ class Player(CircleShape):
         self.position += forward * PLAYER_SPEED * dt        
     
     def shoot(self):
-        self.timer = PLAYER_SHOOT_COOLDOWN
-        shot = Shot(self.position, self.rotation)
+        self.timer = self.weapon.get_cooldown()
+        self.weapon.shoot(self.position, self.rotation)
+
 
     def respawn(self):
         self.position = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)

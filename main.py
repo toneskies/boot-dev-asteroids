@@ -54,7 +54,10 @@ def main():
         # User clicks 'x' closes the game
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return        
+                return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LCTRL:
+                    player.weapon.next_weapon()
 
         updatable.update(dt)
 
@@ -93,6 +96,9 @@ def main():
 
         lives_text = font.render(f"Lives: {lives}", True, "white")
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
+
+        weapon_text = font.render(f"Weapon: {player.weapon.name}", True, "white")
+        screen.blit(weapon_text, (10, SCREEN_HEIGHT - weapon_text.get_height() - 10))
 
         pygame.display.flip()
         dt = time_clock.tick(60) / 1000
