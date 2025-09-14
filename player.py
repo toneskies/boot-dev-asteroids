@@ -63,6 +63,8 @@ class Player(CircleShape):
             self.velocity = pygame.Vector2(0, 0)
         self.position += self.velocity * dt
 
+        self.wrap_around_screen()
+
         if keys[pygame.K_SPACE]:
             if self.timer <= 0:
                 self.shoot()
