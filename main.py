@@ -12,9 +12,18 @@ def main():
     print(f'Screen width: {SCREEN_WIDTH}')
     print(f'Screen height: {SCREEN_HEIGHT}')
 
+    # Initialize pygame
     pygame.init()
+
+    # Setup
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Asteroids")
     time_clock = pygame.time.Clock()
+
+    # Background Image
+    background_image = pygame.image.load("space_background.png").convert()
+    background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    background_image.set_alpha(80)
 
 
     updatable = pygame.sprite.Group()
@@ -74,6 +83,7 @@ def main():
                     bullet.kill()
 
         screen.fill("black")
+        screen.blit(background_image, (0, 0))
 
         for obj in drawable:
             obj.draw(screen)
