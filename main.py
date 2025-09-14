@@ -62,7 +62,7 @@ def main():
         updatable.update(dt)
 
         for obj in asteroids:
-            if obj.collision(player):
+            if player.collides_with_asteroid(obj):
                 if player.immunity_timer <= 0:
                     if lives > 1:
                         lives -= 1

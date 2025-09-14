@@ -22,6 +22,32 @@ class Player(CircleShape):
         c = self.position - forward * self.radius + right
         return [a, b, c]
 
+    def collides_with_asteroid(self, asteroid):
+        points = self.triangle()
+
+        for point in points:
+            if asteroid.position.distance_to(point) < asteroid.radius:
+                return True
+         
+        for i in range(3):
+            p1 = points[i]
+            p2 = points[(i + 1) % 3]
+
+            line_vec = p2 - p1
+            if line_vec.length_squared() == 0:
+                continue
+            point_vec = asteroid.position - p1
+
+            t = line_vec.dot(point_vec) / line_vec.length_squared()
+            t = max(0, min(1, t))
+
+            closest_point = p1 + t * line_vec
+            
+            if closest_point.distance_to(asteroid.position) < asteroid.radius:
+                return True
+        
+        return False
+
     def draw(self, screen):
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
 
