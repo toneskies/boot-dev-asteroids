@@ -10,8 +10,8 @@ class Player(CircleShape):
         self.rotation = 0
         self.timer = 0
         self.immunity_timer = 0
+        self.velocity = pygame.Vector2(0, 0)
     
-    # in the player class
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         right = pygame.Vector2(0, 1).rotate(self.rotation + 90) * self.radius / 1.5
@@ -38,6 +38,7 @@ class Player(CircleShape):
         self.position = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.rotation = 0
         self.immunity_timer = PLAYER_IMMUNITY_TIMER
+        self.velocity = pygame.Vector2(0, 0)
 
 
     def update(self, dt):
@@ -46,14 +47,22 @@ class Player(CircleShape):
             self.immunity_timer -= dt
         keys = pygame.key.get_pressed()
 
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
         if keys[pygame.K_a]:
             self.rotate(dt * -1)
         if keys[pygame.K_d]:
             self.rotate(dt)
         if keys[pygame.K_w]:
-            self.move(dt)
+            self.velocity += forward * PLAYER_ACCELERATION * dt
         if keys[pygame.K_s]:
-            self.move(dt * -1)
+            self.velocity -= forward * PLAYER_ACCELERATION * dt
+
+        if self.velocity.magnitude() > 0:
+            self.velocity = pygame.Vector2.normalize(self.velocity) * min(self.velocity.magnitude(), PLAYER_MAX_SPEED)
+        else:
+            self.velocity = pygame.Vector2(0, 0)
+        self.position += self.velocity * dt
+
         if keys[pygame.K_SPACE]:
             if self.timer <= 0:
                 self.shoot()

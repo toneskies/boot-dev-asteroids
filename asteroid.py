@@ -29,3 +29,6 @@ class Asteroid(CircleShape):
     
     def get_position(self):
         return self.position
+    
+    def get_radius(self):
+        return self.radius

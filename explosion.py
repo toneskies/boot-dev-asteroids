@@ -1,22 +1,33 @@
 import pygame
+import random
 from constants import *
 
 class Explosion(pygame.sprite.Sprite):
-    def __init__(self, position):
+    def __init__(self, position, asteroid_radius):
         super().__init__(self.containers)
-        self.position = position
-        self.timer = EXPLOSION_DURATION
+        self.particles = []
+        # for _ in range(EXPLOSION_PARTICLES):
+        num_particles = int(EXPLOSION_PARTICLES * (asteroid_radius / ASTEROID_MIN_RADIUS))
+        explosion_speed = EXPLOSION_SPEED * (asteroid_radius / ASTEROID_MIN_RADIUS)
+        explosion_duration = EXPLOSION_DURATION * (asteroid_radius / ASTEROID_MIN_RADIUS)
+        for _ in range(num_particles):
+            self.particles.append(
+                {
+                    "position": pygame.Vector2(position),
+                    "velocity": pygame.Vector2(random.uniform(-1, 1), random.uniform(-1, 1)).normalize() * random.uniform(50, explosion_speed),
+                    "timer": explosion_duration
+                }
+            )
 
     def update(self, dt):
-        self.timer -= dt
-        if self.timer <= 0:
+        for particle in self.particles:
+            particle["position"] += particle["velocity"] * dt
+            particle["timer"] -= dt
+        self.particles = [p for p in self.particles if p["timer"] > 0]
+        if not self.particles:
             self.kill()
         
     def draw(self, screen):
-        size = 1 - (self.timer / EXPLOSION_DURATION)
-        color_1 = (255, 255, 255, 200 * size) # white
-        color_2 = (255, 120, 0, 150 * size) #orange
-        color_3 = (255, 0, 0, 100*size) #red
-        pygame.draw.circle(screen, color_1, self.position, 10 * size)
-        pygame.draw.circle(screen, color_2, self.position, 10 * size)
-        pygame.draw.circle(screen, color_3, self.position, 10 * size)
+        particle_radius = EXPLOSION_PARTICLE_RADIUS * (self.particles[0]["timer"] / EXPLOSION_DURATION) if self.particles else 0
+        for particle in self.particles:
+            pygame.draw.circle(screen, "white", particle["position"], particle_radius)

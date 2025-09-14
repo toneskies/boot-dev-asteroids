@@ -69,7 +69,7 @@ def main():
             for bullet in shots:
                 if bullet.collision(asteroid):
                     score += asteroid.get_score()
-                    Explosion(asteroid.get_position())
+                    Explosion(asteroid.get_position(), asteroid.get_radius())
                     asteroid.split()
                     bullet.kill()
 
