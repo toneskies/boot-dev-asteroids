@@ -163,6 +163,15 @@ def main():
     background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
     background_image.set_alpha(80)
 
+def main():
+    """Main function to control game states."""
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Asteroids")
+    background_image = pygame.image.load("space_background.png").convert()
+    background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    background_image.set_alpha(80)
+
     while True:
         # --- MENU STATE ---
         menu_running = True
@@ -186,6 +195,7 @@ def main():
         game_over_running = True
         restart_button_rect = None
         while game_over_running:
+            mouse_pos = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -196,7 +206,7 @@ def main():
             
             screen.fill("black")
             screen.blit(background_image, (0, 0))
-            restart_button_rect = ui.draw_game_over_screen(screen, final_score)
+            restart_button_rect = ui.draw_game_over_screen(screen, final_score, mouse_pos)
             pygame.display.flip()
 
 if __name__ == "__main__":
