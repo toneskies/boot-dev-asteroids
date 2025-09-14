@@ -8,6 +8,7 @@ from asteroidfield import *
 from explosion import *
 from powerup import *
 from bomb import *
+from enemy import *
 
 def main():
     # INITIALIZATION
@@ -35,6 +36,7 @@ def main():
     shots = pygame.sprite.Group()
     powerups = pygame.sprite.Group()
     bombs = pygame.sprite.Group()
+    enemies = pygame.sprite.Group()
 
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
@@ -43,9 +45,11 @@ def main():
     Explosion.containers = (updatable, drawable)
     PowerUp.containers = (powerups, updatable, drawable)
     Bomb.containers = (bombs, updatable, drawable)
+    Enemy.containers = (enemies, updatable, drawable)
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
+    enemy = Enemy(100, 100)
 
     dt = 0
     powerup_spawn_timer = 0
@@ -123,6 +127,15 @@ def main():
                     Explosion(asteroid.get_position(), asteroid.get_radius())
                     asteroid.split()
                     bullet.kill()
+
+        for enemy in enemies:
+            for bullet in shots:
+                if bullet.collision(enemy):
+                    score += enemy.get_score()
+                    Explosion(enemy.get_position(), enemy.get_radius())
+                    enemy.kill()
+                    bullet.kill()
+
 
         screen.fill("black")
         screen.blit(background_image, (0, 0))
