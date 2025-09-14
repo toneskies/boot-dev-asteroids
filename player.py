@@ -3,6 +3,7 @@ from constants import *
 from circleshape import *
 from shot import *
 from weapon import *
+from bomb import *
 
 
 class Player(CircleShape):
@@ -14,6 +15,8 @@ class Player(CircleShape):
         self.velocity = pygame.Vector2(0, 0)
         self.weapon = Weapon()
         self.shield_timer = 0
+        self.bombs = 1
+        self.bomb_cooldown_timer = 0
     
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -73,6 +76,8 @@ class Player(CircleShape):
     def activate_shield(self):
         self.shield_timer = SHIELD_DURATION
 
+    def add_bomb(self):
+        self.bombs += 1
 
     def respawn(self):
         self.position = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
@@ -87,6 +92,8 @@ class Player(CircleShape):
             self.immunity_timer -= dt
         if self.shield_timer > 0:
             self.shield_timer -= dt
+        if self.bomb_cooldown_timer > 0:
+            self.bomb_cooldown_timer -= dt
         keys = pygame.key.get_pressed()
 
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -98,6 +105,11 @@ class Player(CircleShape):
             self.velocity += forward * PLAYER_ACCELERATION * dt
         if keys[pygame.K_s]:
             self.velocity -= forward * PLAYER_ACCELERATION * dt
+        if keys[pygame.K_g]:
+            if self.bombs > 0 and self.bomb_cooldown_timer <= 0:
+                self.bombs -= 1
+                Bomb(self.position)
+                self.bomb_cooldown_timer = 1.0
 
         if self.velocity.magnitude() > 0:
             self.velocity = pygame.Vector2.normalize(self.velocity) * min(self.velocity.magnitude(), PLAYER_MAX_SPEED)

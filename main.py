@@ -1,11 +1,13 @@
 import pygame
 import sys
+import random
 from constants import *
 from player import *
 from asteroid import *
 from asteroidfield import *
 from explosion import *
 from powerup import *
+from bomb import *
 
 def main():
     # INITIALIZATION
@@ -32,6 +34,7 @@ def main():
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     powerups = pygame.sprite.Group()
+    bombs = pygame.sprite.Group()
 
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
@@ -39,6 +42,7 @@ def main():
     Shot.containers = (shots, updatable, drawable)
     Explosion.containers = (updatable, drawable)
     PowerUp.containers = (powerups, updatable, drawable)
+    Bomb.containers = (bombs, updatable, drawable)
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     asteroid_field = AsteroidField()
@@ -67,7 +71,8 @@ def main():
         powerup_spawn_timer += dt
         if powerup_spawn_timer > POWERUP_SPAWN_RATE:
             powerup_spawn_timer = 0
-            PowerUp()
+            powerup_type = random.choice(["shield", "bomb"])
+            PowerUp(powerup_type)
 
 
         updatable.update(dt)
@@ -94,8 +99,22 @@ def main():
 
         for powerup in powerups:
             if powerup.collision(player):
-                player.activate_shield()
+                if powerup.type == "shield":
+                    player.activate_shield()
+                elif powerup.type == "bomb":
+                    player.add_bomb()
                 powerup.kill()
+
+        # Bomb Shockwave Collision
+        for bomb in bombs:
+            if bomb.state == "exploding":
+                for asteroid in asteroids.copy():
+                    distance = asteroid.position.distance_to(bomb.position)
+                    if distance < bomb.shockwave_radius:
+                        score += asteroid.get_score()
+                        Explosion(asteroid.get_position(), asteroid.get_radius())
+                        asteroid.kill()
+
 
         for asteroid in asteroids:
             for bullet in shots:
@@ -119,6 +138,17 @@ def main():
 
         weapon_text = font.render(f"Weapon: {player.weapon.name}", True, "white")
         screen.blit(weapon_text, (10, SCREEN_HEIGHT - weapon_text.get_height() - 10))
+
+        # Draw Bomb UI
+        bomb_icon_rect = pygame.Rect(10, SCREEN_HEIGHT - 40, 30, 30)
+        pygame.draw.circle(screen, "red", bomb_icon_rect.center, 15)
+        bomb_font = pygame.font.Font(None, 24)
+        bomb_b_text = bomb_font.render("B", True, "white")
+        screen.blit(bomb_b_text, bomb_b_text.get_rect(center=bomb_icon_rect.center))
+
+        bomb_count_text = font.render(f": {player.bombs}", True, "white")
+        screen.blit(bomb_count_text, (bomb_icon_rect.right + 5, bomb_icon_rect.centery - bomb_count_text.get_height() / 2))
+
 
         pygame.display.flip()
         dt = time_clock.tick(60) / 1000
