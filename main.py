@@ -79,7 +79,8 @@ def game_loop(screen):
 
         # Update
         updatable.update(dt)
-        enemies.update(dt, player)
+        for enemy in enemies:
+            enemy.update(dt, player, asteroids)
 
         # Collisions
         for obj in asteroids:
@@ -130,6 +131,22 @@ def game_loop(screen):
                     Explosion(enemy_ship.get_position(), enemy_ship.get_radius())
                     enemy_ship.kill()
                     bullet.kill()
+
+        for enemy_ship in enemies:
+            for asteroid in asteroids:
+                if asteroid.collision(enemy_ship):
+                    Explosion(enemy_ship.get_position(), enemy_ship.get_radius())
+                    enemy_ship.kill()
+                    asteroid.split()
+                    break
+
+        for asteroid in asteroids:
+            for bullet in enemy_shots:
+                if bullet.collision(asteroid):
+                    Explosion(asteroid.get_position(), asteroid.get_radius())
+                    asteroid.split()
+                    bullet.kill()
+
 
         for asteroid in asteroids:
             for bullet in shots:
