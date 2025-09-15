@@ -19,6 +19,7 @@ class Player(CircleShape):
         self.bomb_cooldown_timer = 0
         self.font = pygame.font.Font(None, 24)
         self.shoot_sound = pygame.mixer.Sound("ship_shot_sound.wav")
+        self.shoot_sound.set_volume(0.1)
 
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -34,7 +35,7 @@ class Player(CircleShape):
         for point in points:
             if asteroid.position.distance_to(point) < asteroid.radius:
                 return True
-         
+
         for i in range(3):
             p1 = points[i]
             p2 = points[(i + 1) % 3]
@@ -48,33 +49,44 @@ class Player(CircleShape):
             t = max(0, min(1, t))
 
             closest_point = p1 + t * line_vec
-            
+
             if closest_point.distance_to(asteroid.position) < asteroid.radius:
                 return True
-        
+
         return False
 
     def draw(self, screen):
         if self.shield_timer > 0:
             shield_radius = self.radius + 8
-            shield_surface = pygame.Surface((shield_radius * 2, shield_radius * 2), pygame.SRCALPHA)
-            pygame.draw.circle(shield_surface, (255, 255, 0, 100), (shield_radius, shield_radius), shield_radius)
-            screen.blit(shield_surface, (self.position.x - shield_radius, self.position.y - shield_radius))
+            shield_surface = pygame.Surface(
+                (shield_radius * 2, shield_radius * 2), pygame.SRCALPHA
+            )
+            pygame.draw.circle(
+                shield_surface,
+                (255, 255, 0, 100),
+                (shield_radius, shield_radius),
+                shield_radius,
+            )
+            screen.blit(
+                shield_surface,
+                (self.position.x - shield_radius, self.position.y - shield_radius),
+            )
 
             timer_text = self.font.render(f"{self.shield_timer:.1f}", True, "yellow")
-            text_rect = timer_text.get_rect(center=(self.position.x, self.position.y - self.radius - 20))
+            text_rect = timer_text.get_rect(
+                center=(self.position.x, self.position.y - self.radius - 20)
+            )
             screen.blit(timer_text, text_rect)
-        
+
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
-        
 
     def rotate(self, dt):
         self.rotation += PLAYER_TURN_SPEED * dt
-    
+
     def move(self, dt):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        self.position += forward * PLAYER_SPEED * dt        
-    
+        self.position += forward * PLAYER_SPEED * dt
+
     def shoot(self):
         self.timer = self.weapon.get_cooldown()
         self.weapon.shoot(self.position, self.rotation)
@@ -91,7 +103,6 @@ class Player(CircleShape):
         self.rotation = 0
         self.immunity_timer = PLAYER_IMMUNITY_TIMER
         self.velocity = pygame.Vector2(0, 0)
-
 
     def update(self, dt):
         self.timer -= dt
@@ -119,7 +130,9 @@ class Player(CircleShape):
                 self.bomb_cooldown_timer = 1.0
 
         if self.velocity.magnitude() > 0:
-            self.velocity = pygame.Vector2.normalize(self.velocity) * min(self.velocity.magnitude(), PLAYER_MAX_SPEED)
+            self.velocity = pygame.Vector2.normalize(self.velocity) * min(
+                self.velocity.magnitude(), PLAYER_MAX_SPEED
+            )
         else:
             self.velocity = pygame.Vector2(0, 0)
         self.position += self.velocity * dt
@@ -129,5 +142,3 @@ class Player(CircleShape):
         if keys[pygame.K_SPACE]:
             if self.timer <= 0:
                 self.shoot()
-
-        
