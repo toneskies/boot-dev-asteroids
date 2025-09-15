@@ -18,6 +18,7 @@ class Player(CircleShape):
         self.bombs = 1
         self.bomb_cooldown_timer = 0
         self.font = pygame.font.Font(None, 24)
+        self.shoot_sound = pygame.mixer.Sound("ship_shot_sound.wav")
 
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -77,6 +78,7 @@ class Player(CircleShape):
     def shoot(self):
         self.timer = self.weapon.get_cooldown()
         self.weapon.shoot(self.position, self.rotation)
+        self.shoot_sound.play()
 
     def activate_shield(self):
         self.shield_timer = SHIELD_DURATION

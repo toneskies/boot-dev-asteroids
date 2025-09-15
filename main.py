@@ -188,6 +188,7 @@ def game_loop(screen):
 def main():
     """Main function to control game states."""
     pygame.init()
+    pygame.mixer.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Asteroids")
     background_image = pygame.image.load("space_background.png").convert()
